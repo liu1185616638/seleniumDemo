@@ -1,0 +1,150 @@
+from selenium.webdriver.chrome.options import  Options
+from selenium import webdriver
+import configparser
+import time
+import os
+
+
+def str_sec(x):
+    '''
+    字符串时分秒转换成秒
+    '''
+    m, s = x.strip().split(':')  # .split()函数将其通过':'分隔开，.strip()函数用来除去空格
+    return int(m)*60 + int(s)  # int()函数转换成整数运算
+
+
+def switch(driver_stduy):
+    current_window = driver.current_window_handle
+    all_window = driver_stduy.window_handles
+    print(all_window)
+    for window in all_window:  # 通过遍历判断要切换的窗口
+        print("window::  ", window)
+        if window != current_window:
+            driver.switch_to.window(window)  # 将定位焦点切换到指定的窗口，包含所有可切换焦点的选项
+    current_window = driver.current_window_handle
+    print(current_window)
+
+
+def start_dis(driverStduy):
+    for n in range(0, len(driverStduy.find_elements_by_class_name('cell'))):
+        cell = driverStduy.find_elements_by_class_name('cell')[n]
+        cell_type = driverStduy.find_elements_by_class_name('sh-res-b')[n]
+        # print(cell.get_attribute('data-cellid'))
+        width = driverStduy.find_elements_by_class_name('am-progress-bar-warning')[n]
+        print("------------查看" + str(cell.text) + "进度----------进度为：" + str(width.text))
+        if(width.text == '100 %'):
+            continue
+        elif(cell_type.text == "( 视频 )"):
+            cell.click()
+            time.sleep(10)
+# 必须点击一下等待时间显示出来，然后再获取视频时长。。。。坑逼
+            driver.find_element_by_id("video_container_").click()
+            time.sleep(2)  # 等待两秒再获取
+            video_time = driverStduy.find_element_by_class_name("jw-text-duration").text
+            print('打印一下视频时间'+str(video_time))
+            # 获取完了再点击开始
+            driver.find_element_by_id("video_container_").click()
+            video_time_s = str_sec(video_time)
+            for n_time in range(0, int(video_time_s/100)+1):
+                print('每隔100s打印一下剩余时间：' + str(video_time_s))
+                if(int(video_time_s) > 100):
+                    video_time_s = video_time_s - 100
+                time.sleep(100)
+        else:
+            cell.click()
+# 不等待5s不能获取到对应的节点元素，奇怪
+            time.sleep(5)
+            print("----------开始PPT阅读，页数：")
+            print(int(driver.find_element_by_xpath("//span[@class='MPreview-pageCount']/em").text))
+            for click_em in range(0, int(int(driver.find_element_by_xpath("//span[@class='MPreview-pageCount']/em").text))):
+                time.sleep(1)
+                driverStduy.find_element_by_class_name("MPreview-pageNext").click()
+        # 改成点击退出不然有BUG
+        btn_queding = driverStduy.find_element_by_xpath("//*[@id='content-modal']/div/div[2]/span")
+        if(btn_queding.is_displayed()):
+            print("-----------此章节学习完毕，点击完成")
+            btn_queding.click()
+        driverStduy.find_element_by_id("btn_cw_exit").click()
+        btn_quit = driverStduy.find_element_by_xpath("//*[@id='my-confirm']/div/div[3]/span[2]")
+        if (btn_quit.is_displayed()):
+            print("------------退出")
+            btn_quit.click()
+        '''
+        driverStduy.refresh()
+        driverStduy.back()
+        driverStduy.refresh()
+        print("完成一次学习，等待3S")
+        '''
+        time.sleep(3)
+
+
+def start_study(driverStduy, name):
+    print('开始学习：'+str(name))
+    driverStduy.find_element_by_link_text(name).click()
+    switch(driverStduy)
+    print("---------点击课程学习")
+    driverStduy.find_element_by_partial_link_text('课程学习').click()
+# 获取本章节学习进度
+    start_dis(driverStduy)
+
+# driverStduy.find_element_by_partial_link_text('继续学习').click()
+#    print(len(driver.find_elements_by_tag_name("a")))
+# driverStduy.find_element_by_xpath("//li[@class='cell_info']").click()
+
+
+if __name__ == '__main__':
+    cf = configparser.ConfigParser()
+    root_dir = os.path.abspath('.')
+    cf.read(root_dir+"\\config.ini", encoding="utf-8-sig")  # 拼接得到config.ini文件的路径，直接使用
+
+    # 使用webdriver驱动浏览器程序
+    # 通过executable_path指明浏览器驱动文件所在路径
+    # driver=webdriver.Ie(executable_path="d:\\IEDriverServer")
+
+    # 以下均把浏览器驱动文件放进python安装程序的Scripts路径下
+    # driver=webdriver.Ie()
+    # driver=webdriver.Firefox()
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')
+    '''
+    这里设置一下是否隐藏浏览器，带ops为隐藏
+    '''
+    # driver = webdriver.Chrome(options=chrome_options)
+    driver = webdriver.Chrome()
+    # 打开首页
+    driver.get('http://hngydx.hnscen.cn/portal/home.aspx')
+    # 清空内容
+    driver.find_element_by_name("username").clear()
+    # 在账号输入框中输入
+    driver.find_element_by_name("username").send_keys(cf.get('user', 'username'))
+    # 清空密码框缓存内容
+    driver.find_element_by_name("password").clear()
+    # 在密码输入框中输入
+    driver.find_element_by_name("password").send_keys(cf.get('user', 'password'))
+    # 单击搜索按钮
+    driver.find_element_by_id("btn_login").click()
+    # 等待2秒，以便查看结果
+    time.sleep(1)
+    print("------------登陆成功！")
+    # 进入我的首页
+    driver.find_element_by_link_text("学生空间").click()
+    # driver.get("http://hngydx.hnscen.cn/stumanager/default.aspx")
+    print("------------进入学生空间！")
+    # 进入我的课程
+    driver.find_element_by_link_text("我的课程").click()
+    # driver.get("http://hngydx.hnscen.cn/stumanager/LearningSpace.aspx")
+    print("------------进入我的课程！")
+    # 查看进度
+    for n in range(1, 6):
+        kcName = driver.find_element_by_xpath("//tbody/tr[" + str(n) + "]/td[1]/div").text
+        kcSize = driver.find_element_by_xpath("//tbody/tr["+str(n)+"]/td[3]/div/div").text
+        print("------------查看课程进度-----"+str(kcName)+"-----进度为："+str(kcSize))
+        if kcSize == "100%":
+            continue
+        else:
+            start_study(driver, kcName)
+        driver.close()
+
+# time.sleep(5)
+# 退出浏览器
+# driver.quit()
