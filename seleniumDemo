@@ -50,13 +50,27 @@ def start_dis(driverStduy):
                 if(int(video_time_s) > 100):
                     video_time_s = video_time_s - 100
                 time.sleep(100)
+            btn_qd = driverStduy.find_element_by_xpath("//*[@id='content-modal']/div/div[2]/span")
+            if (btn_qd.is_displayed()):
+                print("-----------此章视频学习完毕，点击完成")
+                btn_qd.click()
+            time.sleep(2)
+            print("休眠2S，尝试获取下页按钮")
+            try:
+                print("----------开始PPT阅读，页数：")
+                print(int(driver.find_element_by_xpath("//span[@class='MPreview-pageCount']/em").text))
+                for click_em in range(0, int(driver.find_element_by_xpath("//span[@class='MPreview-pageCount']/em").text)):
+                    time.sleep(1)
+                    driverStduy.find_element_by_class_name("MPreview-pageNext").click()
+            except:
+                print("获取失败，此页不是PPT阅读，退出")
         else:
             cell.click()
 # 不等待5s不能获取到对应的节点元素，奇怪
             time.sleep(5)
             print("----------开始PPT阅读，页数：")
             print(int(driver.find_element_by_xpath("//span[@class='MPreview-pageCount']/em").text))
-            for click_em in range(0, int(int(driver.find_element_by_xpath("//span[@class='MPreview-pageCount']/em").text))):
+            for click_em in range(0, int(driver.find_element_by_xpath("//span[@class='MPreview-pageCount']/em").text)):
                 time.sleep(1)
                 driverStduy.find_element_by_class_name("MPreview-pageNext").click()
         # 改成点击退出不然有BUG
@@ -64,7 +78,9 @@ def start_dis(driverStduy):
         if(btn_queding.is_displayed()):
             print("-----------此章节学习完毕，点击完成")
             btn_queding.click()
+        time.sleep(2)
         driverStduy.find_element_by_id("btn_cw_exit").click()
+        time.sleep(3)
         btn_quit = driverStduy.find_element_by_xpath("//*[@id='my-confirm']/div/div[3]/span[2]")
         if (btn_quit.is_displayed()):
             print("------------退出")
@@ -109,8 +125,8 @@ if __name__ == '__main__':
     '''
     这里设置一下是否隐藏浏览器，带ops为隐藏
     '''
-    # driver = webdriver.Chrome(options=chrome_options)
-    driver = webdriver.Chrome()
+    driver = webdriver.Chrome(options=chrome_options)
+    # driver = webdriver.Chrome()
     # 打开首页
     driver.get('http://hngydx.hnscen.cn/portal/home.aspx')
     # 清空内容
