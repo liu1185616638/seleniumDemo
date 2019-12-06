@@ -44,7 +44,11 @@ def start_dis(driverStduy):
             print('打印一下视频时间'+str(video_time))
             # 获取完了再点击开始
             driver.find_element_by_id("video_container_").click()
-            video_time_s = str_sec(video_time)
+            try:
+                video_time_s = str_sec(video_time)
+            except:
+                print("时间转换错误，此章学习十分钟")
+                video_time_s = 601
             for n_time in range(0, int(video_time_s/100)+1):
                 print('每隔100s打印一下剩余时间：' + str(video_time_s))
                 if(int(video_time_s) > 100):
