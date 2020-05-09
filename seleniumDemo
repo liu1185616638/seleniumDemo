@@ -37,13 +37,21 @@ def start_dis(driverStduy):
         elif(cell_type.text == "( 视频 )"):
             cell.click()
             time.sleep(10)
-# 必须点击一下等待时间显示出来，然后再获取视频时长。。。。坑逼
-            driver.find_element_by_id("video_container_").click()
+            # 2020.5.8 每次进入视频判断自动跳转是否被选中
+            checkbox = driver.find_element_by_class_name("autoNext")
+            if(checkbox.is_selected()):
+                print('取消自动下一章')
+                checkbox.click()
+            time.sleep(2)  # 等待两秒
+            # 必须点击一下等待时间显示出来，然后再获取视频时长。。。。坑逼
+            video = driver.find_element_by_id("video_container_")
+            video.click()
             time.sleep(2)  # 等待两秒再获取
             video_time = driverStduy.find_element_by_class_name("jw-text-duration").text
+
             print('打印一下视频时间'+str(video_time))
             # 获取完了再点击开始
-            driver.find_element_by_id("video_container_").click()
+            video.click()
             try:
                 video_time_s = str_sec(video_time)
             except:
@@ -68,7 +76,7 @@ def start_dis(driverStduy):
                     driverStduy.find_element_by_class_name("MPreview-pageNext").click()
             except:
                 print("获取失败，此页不是PPT阅读，退出")
-        else:
+        elif(cell_type.text == "( office文档 )"):
             cell.click()
 # 不等待5s不能获取到对应的节点元素，奇怪
             time.sleep(5)
@@ -77,6 +85,8 @@ def start_dis(driverStduy):
             for click_em in range(0, int(driver.find_element_by_xpath("//span[@class='MPreview-pageCount']/em").text)):
                 time.sleep(1)
                 driverStduy.find_element_by_class_name("MPreview-pageNext").click()
+        else:
+            continue
         # 改成点击退出不然有BUG
         btn_queding = driverStduy.find_element_by_xpath("//*[@id='content-modal']/div/div[2]/span")
         if(btn_queding.is_displayed()):
@@ -129,8 +139,8 @@ if __name__ == '__main__':
     '''
     这里设置一下是否隐藏浏览器，带ops为隐藏
     '''
-    driver = webdriver.Chrome(options=chrome_options)
-    # driver = webdriver.Chrome()
+    # driver = webdriver.Chrome(options=chrome_options)
+    driver = webdriver.Chrome()
     # 打开首页
     driver.get('http://hngydx.hnscen.cn/portal/home.aspx')
     # 清空内容
